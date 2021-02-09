@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Atma:wght@500&display=swap');
+
+body {
+  font-family: 'Roboto', sans serif;
+}
+
+.logo, .navbar  {
+  background-color: #ad0059!important;
+}
+
+.box-header {
+  color: white!important;
+}
+
+.content-wrapper, .box {
+  background-color: #222;
+  color: white;
+}
+
+.box {
+  border: 1px solid white;
+}
+
+.main-sidebar {
+  background-color: black!important;
+}
+
+.sidebar-menu > li.active > a  {
+  border-left-color: #ad0059!important;
+}
+
+.sidebar-toggle:hover {
+  background-color: #cd669b!important;
+}
+
+h1, h2, h3 {
+  font-family: "Atma", serif;
+}
+
+.main-header .logo {
+  font-family: "Atma", serif;
+  font-weight: bold;
+  font-size: 24px;
+}
+
+
+.irs-bar {
+  border-top-color: #ad0059!important;
+  border-bottom-color: #ad0059!important;
+  background-color: #ad0059!important;
+}
+
+.irs-single {
+  background-color: #ad0059!important;
+}
