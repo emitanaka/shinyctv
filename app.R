@@ -22,6 +22,7 @@ library(kableExtra)
 library(igraph)
 library(ggraph)
 library(ctv)
+library(DT)
 
 db <- "http://cran.rstudio.com/web/packages/packages.rds" %>% 
     url() %>% 
@@ -31,6 +32,32 @@ db <- "http://cran.rstudio.com/web/packages/packages.rds" %>%
 CRANview <- available.views() %>% 
     pluck("name") %>% 
     unlist()
+
+DTcallback <- c(
+    "$('table.dataTable.display tbody tr:odd').css('background-color', 'green');",
+    "$('table.dataTable.display tbody tr:even').css('background-color', 'red');",
+    "$('table.dataTable.display tbody tr:odd')",
+    "  .hover(function(){",
+    "    $(this).css('background-color', 'yellow');",
+    "   }, function(){",
+    "    $(this).css('background-color', 'green');",
+    "   }",
+    "  );",
+    "$('table.dataTable.display tbody tr:even')",
+    "  .hover(function(){",
+    "    $(this).css('background-color', 'orange');",
+    "   }, function(){",
+    "    $(this).css('background-color', 'red');",
+    "   }",
+    "  );"
+)
+
+singularize2 <- function(x) {
+    res <- singularize(x)
+    ifelse(res=="bia", "bias", res)
+}
+
+stop_words_rex <- c(paste0("^", stop_words$word, "$"), "^doi", "^[0-9.]+$")
 
 theme_set(
     theme(panel.background = element_rect(fill = NA),
@@ -51,7 +78,8 @@ ui <- dashboardPage(
     dashboardSidebar(
         sidebarMenu(
             menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-            menuItem("Widgets", tabName = "widgets", icon = icon("th"))
+            selectInput("taskview", "CRAN Task View", 
+                        choices = CRANview)
         )
     ),
     dashboardBody(
@@ -59,26 +87,19 @@ ui <- dashboardPage(
             tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
         ),
         tabItems(
-            # First tab content
             tabItem(tabName = "dashboard",
+                    htmlOutput("header"),
                     fluidRow(
-                        valueBox(
-                            comma(nrow(db)), "Total CRAN Packages", icon = icon("box-open"),
-                            color = "purple"
-                        ),
-                        
-                        box(
-                            title = "CRAN packages",
-                            checkboxGroupInput("taskview", "CRAN Task View", 
-                                               choices = CRANview),
-                            textOutput("print")
+                        valueBoxOutput("taskBox")
+                    ),
+                    fluidRow(
+                        box(title = "Ngram",
+                            numericInput("ngram", "Ngram value", value = 2, min = 1, max = 10, step = 1),
+                            selectInput("desc", "Words", choices = c("Title", "Description")),
+                            dataTableOutput("ngramtab")
                         )
                     )
-            ),
-            
-            # Second tab content
-            tabItem(tabName = "widgets",
-                    h2("Widgets tab content")
+
             )
         )
     )
@@ -86,16 +107,48 @@ ui <- dashboardPage(
 
 server <- function(input, output) { 
     
-    output$print <- renderText({
-        str(input$taskview)
+    pkgs <- reactive({
+        ctv:::.get_pkgs_from_ctv_or_repos(input$taskview)[[1]]
     })
     
-    output$taskviewPkgs <- reactive({
-        ctv:::.get_pkgs_from_ctv_or_repos(input$taskview)
+    task_db <- reactive({
+        db %>% 
+            filter(Package %in% pkgs()) %>% 
+            mutate(Description = str_replace_all(Description, "\n", " "),
+                   Description = str_squish(Description),
+                   Title = str_replace_all(Title, "\n", " "))
     })
     
-    output$packages <- reactive({
-        taskviewPkgs
+    ngram_tab <- reactive({
+        words <- paste0("word", 1:input$ngram)
+        task_db() %>% 
+            unnest_tokens(word, as.name(input$desc), token = "ngrams", n = input$ngram) %>% 
+            separate(word, words, sep = " ") %>% 
+            mutate(across(num_range("word", 1:input$ngram), singularize2)) %>% 
+            distinct(!!!map(c("Package", words), as.name)) %>% 
+            filter(if_all(num_range("word", 1:input$ngram), 
+                          ~!str_detect(., paste0(stop_words_rex, collapse = "|")))) %>% 
+            count(!!!map(words, as.name), sort = TRUE) %>% 
+            mutate(word = do.call("paste", map(words, ~eval(parse(text = .x))))) %>% 
+            select(word, n) %>% 
+            # ngrams that appear once is not interesting
+            filter(n!=1)
+    })
+    
+    output$ngramtab <- renderDataTable({
+        datatable(ngram_tab())
+    })
+    
+    output$header <- renderUI({
+        h2(paste("Task View:", input$taskview))
+    })
+    
+    output$taskBox <- renderValueBox({
+        valueBox(
+            paste0(comma(length(pkgs())), " / ", comma(nrow(db))), 
+            "CRAN Task View Packages out of total", icon = icon("box-open"),
+            color = "maroon"
+        )
     })
     
 }

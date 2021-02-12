@@ -53,3 +53,8 @@ h1, h2, h3 {
 .irs-single {
   background-color: #ad0059!important;
 }
+
+/* Data table */
+tr:nth-of-type(odd) {
+    background-color: gray!important; 
+}
