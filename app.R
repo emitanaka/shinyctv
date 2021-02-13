@@ -90,7 +90,8 @@ ui <- dashboardPage(
             tabItem(tabName = "dashboard",
                     htmlOutput("header"),
                     fluidRow(
-                        valueBoxOutput("taskBox")
+                        valueBoxOutput("taskBox"),
+                        dataTableOutput("pkgtable")
                     ),
                     fluidRow(
                         box(title = "Ngram",
@@ -137,6 +138,12 @@ server <- function(input, output) {
     
     output$ngramtab <- renderDataTable({
         datatable(ngram_tab())
+    })
+    
+    output$pkgtable <- renderDataTable({
+        task_db() %>% 
+            select(Package, Title) %>% 
+            datatable()
     })
     
     output$header <- renderUI({
