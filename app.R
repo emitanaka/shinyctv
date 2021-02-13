@@ -60,7 +60,11 @@ ui <- dashboardPage(
         sidebarMenu(
             menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
             selectInput("taskview", "CRAN Task View", 
-                        choices = CRANview)
+                        choices = CRANview),
+            dateRangeInput("cranglog_daterange", "Date range:", 
+                           start = Sys.Date() - years(2) - 2, end = Sys.Date() - 2),
+            selectInput("cranlog_pkgs", "Selected packages",
+                        choices = "MASS", multiple = TRUE)
         )
     ),
     dashboardBody(
@@ -80,17 +84,48 @@ ui <- dashboardPage(
                             selectInput("desc", "Words", choices = c("Title", "Description")),
                             dataTableOutput("ngramtab")
                         )
-                    )
+                    ),
+                    plotOutput("timeplot")
 
             )
         )
     )
 )
 
-server <- function(input, output) { 
+server <- function(input, output, session) { 
+    observe({
+        top5 <- dldatsum() %>% 
+            slice_max(order_by = total, n = 5) %>% 
+            pull(package)
+        updateSelectInput(session, "cranlog_pkgs", choices = pkgs(),
+                          selected = top5)
+    })
+    
+    
+    
     
     pkgs <- reactive({
         ctv:::.get_pkgs_from_ctv_or_repos(input$taskview)[[1]]
+    })
+    
+
+    
+    dldat <- reactive({
+        start <- input$cranglog_daterange[1]
+        end <- input$cranglog_daterange[2]
+        cran_downloads(pkgs(), from = start, to = end)
+    })
+    
+    dldatsum <- reactive({
+        dldat() %>% 
+            group_by(package) %>% 
+            summarise(total = sum(count)) %>% 
+            ungroup()
+    })
+    
+    dldat_select <- reactive({
+        dldat() %>% 
+            filter(package %in% input$cranlog_pkgs)
     })
     
     task_db <- reactive({
@@ -137,6 +172,23 @@ server <- function(input, output) {
             "CRAN Task View Packages out of total", icon = icon("box-open"),
             color = "maroon"
         )
+    })
+    
+    output$timeplot <- renderPlot({
+        ggplot(dldat_select(), aes(date, count, color = package)) +
+            # add shadow lines
+            geom_line(data = rename(dldat_select(), package2 = package), 
+                      color = "gray", aes(group = package2)) +
+            # add date when package was updated
+            #geom_vline(data = updates, aes(xintercept = update),
+            #           linetype = "dashed", color = "#79003e") + 
+            # the trend line
+            geom_line() +
+            scale_y_log10() +
+            facet_grid(package ~ .) + 
+            labs(title = glue("Selected packages downloaded from {input$cranglog_daterange[1]} to {input$cranglog_daterange[2]}")) + 
+            scale_color_discrete_qualitative() +
+            guides(color = FALSE)
     })
     
 }
