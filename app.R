@@ -33,25 +33,6 @@ CRANview <- available.views() %>%
     pluck("name") %>% 
     unlist()
 
-DTcallback <- c(
-    "$('table.dataTable.display tbody tr:odd').css('background-color', 'green');",
-    "$('table.dataTable.display tbody tr:even').css('background-color', 'red');",
-    "$('table.dataTable.display tbody tr:odd')",
-    "  .hover(function(){",
-    "    $(this).css('background-color', 'yellow');",
-    "   }, function(){",
-    "    $(this).css('background-color', 'green');",
-    "   }",
-    "  );",
-    "$('table.dataTable.display tbody tr:even')",
-    "  .hover(function(){",
-    "    $(this).css('background-color', 'orange');",
-    "   }, function(){",
-    "    $(this).css('background-color', 'red');",
-    "   }",
-    "  );"
-)
-
 singularize2 <- function(x) {
     res <- singularize(x)
     ifelse(res=="bia", "bias", res)
