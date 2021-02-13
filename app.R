@@ -85,6 +85,7 @@ ui <- dashboardPage(
                             dataTableOutput("ngramtab")
                         )
                     ),
+                    plotOutput("histplot"),
                     plotOutput("timeplot")
 
             )
@@ -174,6 +175,19 @@ server <- function(input, output, session) {
         )
     })
     
+    output$histplot <- renderPlot({
+        dldat() %>% 
+            group_by(package) %>% 
+            summarise(total = sum(count)) %>%
+            ggplot(aes(total)) + 
+            geom_histogram(color = "white", fill = "#AD0059") + 
+            scale_x_log10(label = comma) + 
+            labs(x = glue("Total download counts from {input$cranglog_daterange[1]} to {input$cranglog_daterange[2]}"),
+                 y = "Number of packages") +
+            scale_y_continuous(expand = c(0, 0))
+            
+    })
+    
     output$timeplot <- renderPlot({
         ggplot(dldat_select(), aes(date, count, color = package)) +
             # add shadow lines
@@ -186,7 +200,7 @@ server <- function(input, output, session) {
             geom_line() +
             scale_y_log10() +
             facet_grid(package ~ .) + 
-            labs(title = glue("Selected packages downloaded from {input$cranglog_daterange[1]} to {input$cranglog_daterange[2]}")) + 
+            labs(title = glue("Downloaded from {input$cranglog_daterange[1]} to {input$cranglog_daterange[2]}")) + 
             scale_color_discrete_qualitative() +
             guides(color = FALSE)
     })
