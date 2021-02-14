@@ -33,6 +33,11 @@ CRANview <- available.views() %>%
     pluck("name") %>% 
     unlist()
 
+names(CRANview) <- available.views() %>% 
+    pluck("topic") %>% 
+    unlist()
+
+
 singularize2 <- function(x) {
     res <- singularize(x)
     ifelse(res=="bia", "bias", res)
@@ -102,9 +107,6 @@ server <- function(input, output, session) {
                           selected = top5)
     })
     
-    
-    
-    
     pkgs <- reactive({
         ctv:::.get_pkgs_from_ctv_or_repos(input$taskview)[[1]]
     })
@@ -163,8 +165,9 @@ server <- function(input, output, session) {
             datatable()
     })
     
+    
     output$header <- renderUI({
-        h2(paste("Task View:", input$taskview))
+        h2(paste("Task View:", names(CRANview)[CRANview==input$taskview]))
     })
     
     output$taskBox <- renderValueBox({
