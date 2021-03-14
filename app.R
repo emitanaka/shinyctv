@@ -60,7 +60,21 @@ theme_set(
           plot.title = element_text(color = "black", face = "bold")))
 
 ui <- dashboardPage(
-    dashboardHeader(title = "R package explorer"),
+    dashboardHeader(title = "R package explorer",
+                    dropdownMenu(type = "messages",
+                                 messageItem(
+                                     from = "Contact",
+                                     message = "Need help or contact developer?",
+                                     icon = icon("envelope"),
+                                     href = "mailto:emi.tanaka@monash.edu"
+                                 ),
+                                 messageItem(
+                                     from = "Support",
+                                     message = "This app will continue to be updated.",
+                                     icon = icon("github"),
+                                     time = "2021-03-10",
+                                     href = "https://github.com/emitanaka/shinyctv"
+                                 ))),
     dashboardSidebar(
         sidebarMenu(
             menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
