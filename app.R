@@ -24,11 +24,20 @@ library(igraph)
 library(ggraph)
 library(ctv)
 library(DT)
+library(rio)
+library(readr)
+library(data.table)
 
-db <- "http://cran.rstudio.com/web/packages/packages.rds" %>% 
+
+db1 <- "http://cran.rstudio.com/web/packages/packages.rds" %>% 
     url() %>% 
     readRDS() %>% 
     as.data.frame()
+
+convert("www/packages.rds", "www/packages.csv") 
+
+db <- as_tibble(fread("www/packages.csv"))
+
 
 CRANview <- available.views() %>% 
     pluck("name") %>% 
