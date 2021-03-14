@@ -94,23 +94,33 @@ ui <- dashboardPage(
             tabItem(tabName = "dashboard",
                     htmlOutput("header"),
                     fluidRow(
-                        valueBoxOutput("taskBox"),
-                        dataTableOutput("pkgtable")
-                    ),
+                        valueBoxOutput("taskBox")),
                     fluidRow(
-                        box(title = "Ngram",
-                            numericInput("ngram", "Ngram value", value = 2, min = 1, max = 10, step = 1),
-                            selectInput("desc", "Words", choices = c("Title", "Description")),
-                            dataTableOutput("ngramtab")
-                        )
-                    ),
-                    plotOutput("histplot"),
-                    plotOutput("timeplot")
+                        tabBox(
+                            width = "250px",
+                            height = "280px",
+                            selected = "Tab3",
+                            tabPanel("Tab1", "Tab content 1",
+                                     dataTableOutput("pkgtable") 
+                                     ),
+                            tabPanel("Tab2", "Ngram",
+                                     numericInput("ngram", "Ngram value", value = 2, min = 1, max = 10, step = 1),
+                                     selectInput("desc", "Words", choices = c("Title", "Description")),
+                                     dataTableOutput("ngramtab")
+                                     ),
+                            tabPanel("Tab3", "Tab content 3",
+                                     plotOutput("histplot")
+                                     ),
+                            tabPanel("Tab4", "Tab content 4",
+                                     plotOutput("timeplot")
+                            )
+                        
+                    )
+                    )
 
             )
         )
-    )
-)
+    ))
 
 server <- function(input, output, session) { 
     observe({
