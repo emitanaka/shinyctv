@@ -9,6 +9,7 @@
 
 library(shiny)
 library(shinydashboard)
+library(plotly)
 library(tidyverse)
 library(rvest)
 library(lubridate)
@@ -109,10 +110,10 @@ ui <- dashboardPage(
                                      dataTableOutput("ngramtab")
                                      ),
                             tabPanel("Tab3", "Tab content 3",
-                                     plotOutput("histplot")
+                                     plotlyOutput("histplot")
                                      ),
                             tabPanel("Tab4", "Tab content 4",
-                                     plotOutput("timeplot")
+                                     plotlyOutput("timeplot")
                             )
                         
                     )
